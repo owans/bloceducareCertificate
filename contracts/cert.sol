@@ -20,22 +20,22 @@ contract BloceducareCerts{
     //assignments constant defaultAssignment = assignments.INACTIVE;
 	// assignment = assignments.COMPLETED;
 
-    //STRUCTS
+    //STRUCTS  
 	struct Admin{
 		bool authorized;
-		uint id
+		uint id;
 	}
 
 	struct Assignment{
 		string link;
-		assignmentStatus(enum) status
+		assignmentStatus status;
 	}
 
 	struct Student{
 		bytes32 firstName;
 		bytes32 lastName;
 		bytes32 commendation; 
-		grades(enum) grade;
+		grades grade;
 		uint16 assignmentIndex;
 		bool active;
 		string email;	
@@ -45,8 +45,8 @@ contract BloceducareCerts{
 	bytes32 firstName;
 	bytes32 lastName;
 	bytes32 commendation;
-	grades(enum) grade;
-	assignments(enum) assignment;
+	grades grade;
+	assignments assignment;
 	bytes32 assignmentIndex;
 	string email;
 	} 
@@ -62,9 +62,9 @@ contract BloceducareCerts{
 	mapping(string => 	mapping(address => StudentCertificate)) public byName;
 	mapping(string => bool) private isParticipant;
 	mapping (address => Admin) admins;
-	mapping( Admin => address)adminReverseMapping
-	mapping(studentIndex => Student) students;
-	mapping(email => studentIndex) studentsReverseMapping;
+	mapping(address => Admin)adminReverseMapping;
+	mapping(uint16 => Student) students;
+	mapping(string => studentIndex) studentsReverseMapping;
 	mapping(uint => Assignment) assignments;
 
 	//events
@@ -74,16 +74,16 @@ contract BloceducareCerts{
 	event AdminLimitChanged(uint _newAdminLimit);
 
      //Student related events
-	event StudentAdded(string email,bytes32 _firstName,bytes32 _lastName,bytes32 _commendation,grades(enum) _grade);
+	event StudentAdded(string email,bytes32 _firstName,bytes32 _lastName,bytes32 _commendation,grades _grade);
 	event StudentRemoved(string _email);
     event StudentNameUpdated(string _Email,bytes32 _newCommendation);
 	event StudentCommendationUpdated(string _Email,bytes32 _newFirstName,bytes32 _newLastName);
-	event StudentGradeUpdated(string _Email,grades(enum) _newGrade);
+	event StudentGradeUpdated(string _Email,grades _newGrade);
 	event StudentEmailUpdated(string _oldEmail,string _newEmail);
 
     //Assignment related events
-	event AssignmentAdded(string _email,string link,assignmentStatus(enum) status,uint16 assignmentIndex);
-	event AssignmentUpdated(string _email,string link,uint16 _assignmentIndex,assignmentStatus(enum) _newstatus);
+	event AssignmentAdded(string _email,string link,assignmentStatus status,uint16 assignmentIndex);
+	event AssignmentUpdated(string _email,string link,uint16 _assignmentIndex,assignmentStatus _newstatus);
 
 	//Certificate related events
 	event certCreated(string _msg,bytes32 _name,string _with,address students,string by,address creator,uint time); 
