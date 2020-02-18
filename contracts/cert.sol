@@ -1,6 +1,15 @@
-  pragma solidity <0.7.10;  
+pragma solidity <0.7.10;  
+pragma experimental ABIEncoderV2;
 
-contract BloceducareCerts{
+import "./Ownable.sol";
+import "./SafeMath.sol";
+import "./SafeMath16.sol";
+
+contract BloceducareCerts is Ownable{
+    
+    using SafeMath for uint256;
+    using SafeMath for uint16;
+    
 	//GLOBAL STATE VARIABLES
 	address private owner;
 	address private newOwner;
@@ -41,8 +50,10 @@ contract BloceducareCerts{
 		grades grade;
 		assignmentStatus assignment;
 		bool active;
-		 
 	}
+	
+	Student[] public student;
+	
 	struct Certificate{
 	address studentAddress; 
 	string email;
@@ -58,12 +69,12 @@ contract BloceducareCerts{
 //Arrays of certificates,admins,students,and assignments
 	string[] certificateList;
 	uint[] admin;
-	string [] studentList;
+	string[] studentList;
 	string[] assignmentList;
 
 	//mapping
 	mapping(address => Certificate) public certificates;
-	mapping(string => mapping(address => Certificate)) public byName;
+	mapping(string => mapping(address => Certificate)) byName;
 	mapping(string => bool) private isParticipant;
 	mapping (address => bool) admins;
 	mapping(address =>Admin)adminReverseMapping;
@@ -87,14 +98,12 @@ contract BloceducareCerts{
 
     //Assignment related events
 	event AssignmentAdded(string _email,string link,assignmentStatus status,uint16 assignmentIndex);
-	event AssignmentUpdated(string _email,string link,uint16 _assignmentIndex,assignmentStatus _newstatus);
+	event AssignmentUpdated(string _email,uint _assignmentIndex,assignmentStatus _newStatus);
 
 	//Certificate related events
 	event certCreated(string _msg,bytes32 _name,string _with,address students,string by,address creator); 
 	event certRemoved(string _msg,address _participantAddress,string _msg2,string at,uint time);
 	event certVerified(string msg,address addressVerified,string _msg);
-	
-	
 	
 	//MODIFIERS
 	modifier onlyOwner(){
@@ -110,6 +119,7 @@ contract BloceducareCerts{
 		require(admins[msg.sender],"Accessible by only Admins");
 		_; 
 	}
+	
 	modifier onlyNonOwnerAdmins(){
 		require(admins[owner] == false && admins[newOwner] == false,"Accessible only by Admins that are not owners");
 		_; 
@@ -201,7 +211,7 @@ contract BloceducareCerts{
 
 	//Allows Admin to update the information of a student
 	function updateStudentInfo(address __studentAddress,string memory __email,bytes32 __firstName,bytes32 ___lastName, 
-	bytes32 __commendation,assignmentStatus __assignments,grades __grade,bool __active) public onlyAdmins {
+	bytes32 __commendation,assignmentStatus __assignments,grades __grade, bool __active) public onlyAdmins {
 	students[__studentAddress] = Student({
 	    email: __email,
 	    firstName : __firstName,
@@ -209,7 +219,7 @@ contract BloceducareCerts{
 	    commendation:__commendation,
 	    assignment: __assignments,
 	    grade: __grade,
-		active:true
+		active: __active = true
 	});
 	studentList.push(__email);
 	}
@@ -245,8 +255,9 @@ contract BloceducareCerts{
 	certificateList.push(__email);
     emit certCreated("A new certificate has been created for:",__firstName,"with address:",__studentAddress,"by:",msg.sender);
 	}
+	
 	function displayPaticipantInfo(address __participantAddress) public{
-	    
+	        
 	}
 	
 	//Allows admin to remove a certificate.
@@ -255,32 +266,67 @@ contract BloceducareCerts{
 		emit certRemoved("A certificate belonging to:",__participantAddress,"has been deleted","at",now);
 	}
 	//
-	function changeStudentName(address _studentAddress,bytes32 ___firstName,bytes32 ___lastName)  onlyAdmins public{
+	function changeStudentName(address _studentAddress,bytes32 ___firstName,bytes32 ___lastName)  onlyAdmins public view{
 	    Student memory _student = students[_studentAddress];
         _student.firstName = ___firstName;
 		_student.lastName = ___lastName;
 	}
-	function changeStudentCommendation(address _studentAddress,bytes32 _commendation) public{
+	function changeStudentCommendation(address _studentAddress,bytes32 _commendation) public view{
 	    Student memory _student = students[_studentAddress];
         _student.commendation = _commendation ;
 	}
 
-	function changeStudentGrade( string memory _email,grades _grade) onlyAdmins public{
+	function changeStudentGrade( string memory _email,grades _grade) onlyAdmins public view{
 		Student memory _student;
 		_student.email = _email;
 		_student.grade = _grade;
 	}
 	
-	function _calcAndFetchAssignmentIndex() public{
-	    
+	function _calcAndFetchAssignmentIndex(uint16 assignmentIndex, bool isFinalProject, Student memory) public view returns(uint16 index){
+	    if(isFinalProject == true){
+	            require(assignmentIndex < studentList.length);
+	            Student storage student = student[assignmentIndex];
+	            return(index);
+	    }else{
+	        Student storage student = student[assignmentIndex];
+	        return (index++);
+	    }
 	}
 
-	//function addAssignment() public{
+	function addAssignment(uint _assignmentIndex, string memory _email, 
+	string memory link, assignmentStatus status, 
+	bool _isFinalProject) 
+	public 
+	onlyAdmins returns(uint){
+	    Student memory _studentStruct;
+	    Assignment memory _assignmentStruct;
 	    
-	//}
-	//function updateAssignmentStatus() public{
+	    _assignmentIndex = studentsReverseMapping[_email];
+        _studentStruct = student[assignmentIndex];
+        
+        _calcAndFetchAssignmentIndex(assignmentIndex, _isFinalProject, _studentStruct);
+
+        _assignmentStruct = Assignment({link: link, status: status});
+
+        emit AssignmentAdded(_email, link, status, assignmentIndex);
+	}
+	
+	function updateAssignmentStatus(uint _assignmentIndex,
+	string memory _email, 
+	assignmentStatus _newStatus,
+	bool _isFinalProject) public onlyAdmins{
+	    Student memory _studentStruct;
+	    Assignment memory _assignmentStruct;
 	    
-	//}
+	    _assignmentIndex = studentsReverseMapping[_email];
+        _studentStruct = student[assignmentIndex];
+        
+        _calcAndFetchAssignmentIndex(assignmentIndex, _isFinalProject, _studentStruct);
+        _assignmentStruct.status = _newStatus;
+        
+     	emit AssignmentUpdated(_email, _assignmentIndex, _newStatus);
+
+	}
 	//function getAssignmentInfo() public{
 	    
 	//}
@@ -291,26 +337,26 @@ contract BloceducareCerts{
 	    
 	//}
 	
- //function checkName(string memory _email) public view returns (string memory) {
-//	 Student memory _students = students[_email];
-//	 _students = students[firstName];
-//	 _students = students[lastName];
-//	 return  firstName;
-//	 return lastName;
- //}  
+ 	//function checkName(string memory _email) public view returns (string memory) {
+	//	 Student memory _students = students[_email];
+	//	 _students = students[firstName];
+	//	 _students = students[lastName];	
+	//	 return  firstName;
+	//	 return lastName;
+ 	//}  
 
-//Get default assignment
-//function getDefaultAssignment() public view returns (uint) {
-//    return uint(defaultAssignment);
-//}
-//Get student grade
-function getGrade(string memory _email) public view returns (grades) {
+	//Get default assignment
+	//function getDefaultAssignment() public view returns (uint) {
+	//    return uint(defaultAssignment);
+	//}
+	//Get student grade
+	function getGrade(string memory _email) public view returns (grades) {
 	 Student memory _student;
 	 _student.email = _email;
      return grade;
 }
 
-function verifyCertByAddress (address _studentAddress) public  returns (bool){
+	function verifyCertByAddress (address _studentAddress) public  returns (bool){
     uint i = 0;
     while ( i < certificateList.length){
         Certificate memory cert;
@@ -320,5 +366,5 @@ function verifyCertByAddress (address _studentAddress) public  returns (bool){
 	}
 	emit certVerified("Student with address:",_studentAddress,"is a graduate of the one million ethereum developers");
     return certificateExist;    
-}
 	}
+}
