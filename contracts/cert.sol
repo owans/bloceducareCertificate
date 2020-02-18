@@ -295,9 +295,7 @@ contract BloceducareCerts is Ownable{
 
 	function addAssignment(uint _assignmentIndex, string memory _email, 
 	string memory link, assignmentStatus status, 
-	bool _isFinalProject) 
-	public 
-	onlyAdmins returns(uint){
+	bool _isFinalProject) public onlyAdmins returns(uint){
 	    Student memory _studentStruct;
 	    Assignment memory _assignmentStruct;
 	    
