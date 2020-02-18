@@ -340,7 +340,7 @@ contract BloceducareCerts is Ownable{
        require(msg.value > amount);
     }
 
-	function withdrawETH() public {
+	function withdrawETH() public onlyOwner {
         msg.sender.transfer(address(this).balance);
     }
 
