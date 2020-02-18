@@ -13,6 +13,7 @@ contract BloceducareCerts is Ownable{
 	//GLOBAL STATE VARIABLES
 	address private owner;
 	address private newOwner;
+	uint256 amount;
 	uint16  adminIndex; 
 	uint16 maxAdminIndex;
 	uint studentIndex;
@@ -52,7 +53,7 @@ contract BloceducareCerts is Ownable{
 		bool active;
 	}
 	
-	Student[] public student;
+	Student[] student;
 	
 	struct Certificate{
 	address studentAddress; 
@@ -256,10 +257,6 @@ contract BloceducareCerts is Ownable{
     emit certCreated("A new certificate has been created for:",__firstName,"with address:",__studentAddress,"by:",msg.sender);
 	}
 	
-	function displayPaticipantInfo(address __participantAddress) public{
-	        
-	}
-	
 	//Allows admin to remove a certificate.
 		function removeCertificate(address __participantAddress) onlyAdmins public{
 		delete certificates[__participantAddress];
@@ -282,13 +279,13 @@ contract BloceducareCerts is Ownable{
 		_student.grade = _grade;
 	}
 	
-	function _calcAndFetchAssignmentIndex(uint16 assignmentIndex, bool isFinalProject, Student memory) public view returns(uint16 index){
+	function _calcAndFetchAssignmentIndex(uint16 _assignmentIndex, bool isFinalProject, Student memory) public view returns(uint16 index){
 	    if(isFinalProject == true){
-	            require(assignmentIndex < studentList.length);
-	            Student storage student = student[assignmentIndex];
-	            return(index);
+	       require(_assignmentIndex < studentList.length);
+	       Student storage student = student[_assignmentIndex];
+	       return(index);
 	    }else{
-	        Student storage student = student[assignmentIndex];
+	        Student storage student = student[_assignmentIndex];
 	        return (index++);
 	    }
 	}
@@ -325,36 +322,36 @@ contract BloceducareCerts is Ownable{
      	emit AssignmentUpdated(_email, _assignmentIndex, _newStatus);
 
 	}
-	//function getAssignmentInfo() public{
-	    
-	//}
-	//function donateEth() public{
-	    
-	//}
-	//function withdrawEth() public{
-	    
-	//}
-	
- 	//function checkName(string memory _email) public view returns (string memory) {
-	//	 Student memory _students = students[_email];
-	//	 _students = students[firstName];
-	//	 _students = students[lastName];	
-	//	 return  firstName;
-	//	 return lastName;
- 	//}  
 
-	//Get default assignment
-	//function getDefaultAssignment() public view returns (uint) {
-	//    return uint(defaultAssignment);
-	//}
-	//Get student grade
-	function getGrade(string memory _email) public view returns (grades) {
+	function getAssignmentInfo(string memory _email, uint _index) public view returns(string memory link, assignmentStatus status){
+	   Student memory _studentStruct;
+	   _index = studentsReverseMapping[_email];
+	   
+	   _studentStruct = student[_index];
+
+        require(_index >= 0 && _index <= 20, "Assignments below the required limit");
+        
+        return(link, status);
+	}
+	
+	function donateETH(uint256 amount) payable public {
+	   amount = 0;
+	   require(msg.sender != address(0), "Invalid address");
+       require(msg.value > amount);
+    }
+
+	function withdrawETH() public {
+        msg.sender.transfer(address(this).balance);
+    }
+
+    //Get student grade
+    function getGrade(string memory _email) public view returns (grades) {
 	 Student memory _student;
 	 _student.email = _email;
      return grade;
-}
+    }
 
-	function verifyCertByAddress (address _studentAddress) public  returns (bool){
+    function verifyCertByAddress (address _studentAddress) public  returns (bool){
     uint i = 0;
     while ( i < certificateList.length){
         Certificate memory cert;
@@ -364,5 +361,5 @@ contract BloceducareCerts is Ownable{
 	}
 	emit certVerified("Student with address:",_studentAddress,"is a graduate of the one million ethereum developers");
     return certificateExist;    
-	}
+    }
 }
