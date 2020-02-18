@@ -281,12 +281,12 @@ contract BloceducareCerts is Ownable{
 	
 	function _calcAndFetchAssignmentIndex(uint16 _assignmentIndex, bool isFinalProject, Student memory) public view returns(uint16 index){
 	    if(isFinalProject == true){
-	       require(_assignmentIndex < studentList.length);
+	       require(_assignmentIndex < assignmentList.length);
 	       Student storage student = student[_assignmentIndex];
-	       return(index);
+	       return(_assignmentIndex);
 	    }else{
 	        Student storage student = student[_assignmentIndex];
-	        return (index++);
+	        return _assignmentIndex++;
 	    }
 	}
 
